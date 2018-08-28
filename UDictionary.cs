@@ -6,8 +6,8 @@ using UnityEngine;
 [Serializable]
 public class UDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 {
-    [SerializeField] public List<TKey> m_keys;
-    [SerializeField] public List<TValue> m_values;
+    [SerializeField] private List<TKey> m_keys;
+    [SerializeField] private List<TValue> m_values;
 
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {
