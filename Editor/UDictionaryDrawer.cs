@@ -1,5 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿/**
+*   Authored by Tomasz Piowczyk
+*   MIT LICENSE: https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/LICENSE
+*   Repository: https://github.com/Prastiwar/UnitySerializedDictionary
+*/
+
+using System;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
@@ -172,137 +177,11 @@ public class UDictionaryDrawer : PropertyDrawer
             }
 
             SerializedProperty key2 = keys.GetArrayElementAtIndex(i);
-            if (GetPropertyValue(key1).Equals(GetPropertyValue(key2)))
+            if (key1.GetValue().Equals(key2.GetValue()))
             {
                 return true;
             }
         }
         return false;
-    }
-
-    private object GetPropertyValue(SerializedProperty key)
-    {
-        switch (key.propertyType)
-        {
-            case SerializedPropertyType.Integer:
-                return key.intValue;
-            case SerializedPropertyType.Float:
-                return key.floatValue;
-            case SerializedPropertyType.String:
-                return key.stringValue;
-            case SerializedPropertyType.Enum:
-                return key.enumValueIndex;
-            case SerializedPropertyType.Boolean:
-                return key.boolValue;
-            case SerializedPropertyType.Color:
-                return key.colorValue;
-            case SerializedPropertyType.ObjectReference:
-                return key.objectReferenceValue;
-            case SerializedPropertyType.Vector2:
-                return key.vector2Value;
-            case SerializedPropertyType.Vector3:
-                return key.vector3Value;
-            case SerializedPropertyType.Vector4:
-                return key.vector4Value;
-            case SerializedPropertyType.Quaternion:
-                return key.quaternionValue;
-            case SerializedPropertyType.Vector2Int:
-                return key.vector2IntValue;
-            case SerializedPropertyType.Vector3Int:
-                return key.vector3IntValue;
-            case SerializedPropertyType.ExposedReference:
-                return key.exposedReferenceValue;
-            case SerializedPropertyType.ArraySize:
-                return key.arraySize;
-            case SerializedPropertyType.Rect:
-                return key.rectValue;
-            case SerializedPropertyType.RectInt:
-                return key.rectIntValue;
-            case SerializedPropertyType.Bounds:
-                return key.boundsValue;
-            case SerializedPropertyType.BoundsInt:
-                return key.boundsIntValue;
-            case SerializedPropertyType.FixedBufferSize:
-                return key.fixedBufferSize;
-            case SerializedPropertyType.AnimationCurve:
-                return key.animationCurveValue;
-            //case SerializedPropertyType.Generic:
-            //    return key.;
-            //case SerializedPropertyType.LayerMask:
-            //    return key.;
-            //case SerializedPropertyType.Character:
-            //    return key.;
-            //case SerializedPropertyType.Gradient:
-            //    return key.;
-            default:
-                break;
-        }
-
-        string typ = key.type;
-        if (typ == "double")
-        {
-            return key.doubleValue;
-        }
-        else if (typ == "long")
-        {
-            return key.longValue;
-        }
-        return GetTargetObjectOfProperty(key);
-    }
-
-    private object GetTargetObjectOfProperty(SerializedProperty prop)
-    {
-        object targetObj = prop.serializedObject.targetObject;
-        string[] elements = prop.propertyPath.Replace(".Array.data[", "[").Split('.');
-        int length = elements.Length;
-        for (int i = 0; i < length; i++)
-        {
-            if (elements[i].Contains("["))
-            {
-                string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-                int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
-                targetObj = GetValue(targetObj, elementName, index);
-            }
-            else
-            {
-                targetObj = GetValue(targetObj, elements[i]);
-            }
-        }
-        return targetObj;
-    }
-
-    private object GetValue(object source, string name)
-    {
-        if (source == null)
-            return null;
-        Type type = source.GetType();
-        while (type != null)
-        {
-            FieldInfo f = type.GetField(name, BindingFlags.Public | privateInstance);
-            if (f != null)
-                return f.GetValue(source);
-
-            PropertyInfo p = type.GetProperty(name, BindingFlags.Public | privateInstance | BindingFlags.IgnoreCase);
-            if (p != null)
-                return p.GetValue(source, null);
-
-            type = type.BaseType;
-        }
-        return null;
-    }
-
-    private object GetValue(object source, string name, int index)
-    {
-        IEnumerable enumerable = GetValue(source, name) as IEnumerable;
-        if (enumerable == null)
-            return null;
-        IEnumerator enm = enumerable.GetEnumerator();
-
-        for (int i = 0; i <= index; i++)
-        {
-            if (!enm.MoveNext())
-                return null;
-        }
-        return enm.Current;
     }
 }
