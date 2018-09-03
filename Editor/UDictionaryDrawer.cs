@@ -95,9 +95,9 @@ public class UDictionaryDrawer : PropertyDrawer
 
     private void DrawErrorMessage(Rect rect, int nameLength)
     {
-        Vector2 addPos = new Vector2(nameLength * 7.5f, 0);
+        Vector2 offsetByName = new Vector2(nameLength * 7.5f, 0);
         Vector2 size = new Vector2(rect.size.x, space);
-        EditorGUI.HelpBox(new Rect(rect.position + addPos, size), "You have duplicated keys, some changes can be lost!", MessageType.Error);
+        EditorGUI.HelpBox(new Rect(rect.position + offsetByName, size), "You have duplicated keys, some changes can be lost!", MessageType.Error);
     }
 
     private void DrawHeader(Rect rect)
@@ -148,9 +148,10 @@ public class UDictionaryDrawer : PropertyDrawer
 
         float oldWidth = EditorGUIUtility.labelWidth;
         float halfSizeX = rect.size.x / 2;
-        float resize = 100;
-        Vector2 sizeKey = new Vector2(halfSizeX - resize, rect.size.y);
-        Vector2 sizeValue = new Vector2(halfSizeX + resize, rect.size.y);
+        float leftOffset = 100;
+        float rightOffset = 58;
+        Vector2 sizeKey = new Vector2(halfSizeX - leftOffset, rect.size.y);
+        Vector2 sizeValue = new Vector2(halfSizeX + rightOffset, rect.size.y);
         Vector2 valuePosition = rect.position + new Vector2(sizeKey.x + 25, 0);
 
         EditorGUIUtility.labelWidth = 50;

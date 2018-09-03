@@ -54,5 +54,7 @@ See also the list of [contributors](https://github.com/Prastiwar/UnitySerialized
 
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/LICENSE) file for details.
 
-![Screenshot](https://i.imgur.com/FPVAmK1.png)
-![Screenshot](https://i.imgur.com/QajAnlU.png)
+## Screenshots
+
+![Screenshot](https://i.imgur.com/mcx19Bk.png)
+![Screenshot](https://i.imgur.com/LRW6bMf.png)
