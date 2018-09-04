@@ -1,4 +1,10 @@
-﻿using System;
+﻿/**
+*   Authored by Tomasz Piowczyk
+*   MIT LICENSE: https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/LICENSE
+*   Repository: https://github.com/Prastiwar/UnitySerializedDictionary
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,6 +14,13 @@ public class UDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializatio
 {
     [SerializeField] private List<TKey> m_keys;
     [SerializeField] private List<TValue> m_values;
+
+    public UDictionary() : base() { }
+    public UDictionary(int capacity) : base(capacity) { }
+    public UDictionary(IEqualityComparer<TKey> comparer) : base(0, comparer) { }
+    public UDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
+    public UDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary, null) { }
+    public UDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary != null ? dictionary.Count : 0, comparer) { }
 
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {

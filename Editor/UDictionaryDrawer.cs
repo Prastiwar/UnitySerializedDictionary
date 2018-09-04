@@ -12,40 +12,55 @@ using UnityEngine;
 
 public class UDictionaryDrawer : PropertyDrawer
 {
-    private readonly GUIContent cachedContent = new GUIContent();
+    private bool isEnabled = false;
     private readonly float space = 17;
+    private readonly GUIContent cachedContent = new GUIContent();
+    protected readonly BindingFlags privateInstanceFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
-    private readonly BindingFlags privateInstance = BindingFlags.NonPublic | BindingFlags.Instance;
-    private readonly Vector2 errLineOffset = new Vector2(35, 0);
-    private readonly Vector2 errSize = new Vector2(5, 20);
-    private Texture2D errorTexture;
-    private GUIStyle errBoxStyle;
-    private bool showError;
+    private readonly Vector2 redBoxOffset = new Vector2(35, 0);
+    protected readonly Vector2 redBoxSize = new Vector2(5, 20);
+    protected Texture2D redBoxTexture;
+    protected GUIStyle redBoxStyle;
+    protected bool showErrorMessage;
 
     protected bool foldoutRList;
     protected int selectedIndex;
     protected float elementHeight;
     protected ReorderableList rList;
 
-    protected SerializedProperty keys;
-    protected SerializedProperty values;
+    protected SerializedProperty keysProperty;
+    protected SerializedProperty valuesProperty;
 
-    protected bool IsDragging { get { return (bool)rList.GetType().GetField("m_Dragging", privateInstance).GetValue(rList); } }
+    protected bool IsDragging { get { return (bool)rList.GetType().GetField("m_Dragging", privateInstanceFlags).GetValue(rList); } }
+
+    private void OnEnable(SerializedProperty property)
+    {
+        isEnabled = true;
+        OnEnabled(property);
+    }
+
+    protected virtual void OnEnabled(SerializedProperty property)
+    {
+        foldoutRList = EditorPrefs.GetBool(property.name);
+        InitializeList(property);
+        InitializeRedBoxVariables();
+    }
+
+    protected void InitializeRedBoxVariables()
+    {
+        redBoxTexture = new Texture2D(1, 1);
+        redBoxTexture.SetPixel(0, 0, Color.red);
+        redBoxTexture.Apply();
+
+        redBoxStyle = new GUIStyle(GUI.skin.box);
+        redBoxStyle.normal.background = redBoxTexture;
+    }
 
     public override bool CanCacheInspectorGUI(SerializedProperty property)
     {
-        if (rList == null)
+        if (!isEnabled)
         {
-            InitializeList(property);
-
-            foldoutRList = EditorPrefs.GetBool(property.name);
-
-            errorTexture = new Texture2D(1, 1);
-            errorTexture.SetPixel(0, 0, Color.red);
-            errorTexture.Apply();
-
-            errBoxStyle = new GUIStyle(GUI.skin.box);
-            errBoxStyle.normal.background = errorTexture;
+            OnEnable(property);
         }
         EditorPrefs.SetBool(property.name, foldoutRList);
         return base.CanCacheInspectorGUI(property);
@@ -54,13 +69,13 @@ public class UDictionaryDrawer : PropertyDrawer
     public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
     {
         foldoutRList = EditorGUI.Foldout(new Rect(rect.position, new Vector2(rect.size.x, space)), foldoutRList, label);
-        if (showError)
+        if (showErrorMessage)
         {
             DrawErrorMessage(rect, property.name.Length);
         }
         if (foldoutRList)
         {
-            showError = false;
+            showErrorMessage = false;
             rect.y += space;
             rList.DoList(rect);
         }
@@ -71,18 +86,12 @@ public class UDictionaryDrawer : PropertyDrawer
         return foldoutRList ? rList.GetHeight() + space : space;
     }
 
-    protected GUIContent GUIContent(string text)
+    protected virtual void InitializeList(SerializedProperty prop)
     {
-        cachedContent.text = text;
-        return cachedContent;
-    }
+        keysProperty = prop.FindPropertyRelative("m_keys");
+        valuesProperty = prop.FindPropertyRelative("m_values");
 
-    protected void InitializeList(SerializedProperty prop)
-    {
-        keys = prop.FindPropertyRelative("m_keys");
-        values = prop.FindPropertyRelative("m_values");
-
-        rList = new ReorderableList(prop.serializedObject, keys, true, true, true, true) {
+        rList = new ReorderableList(prop.serializedObject, keysProperty, true, true, true, true) {
             drawHeaderCallback = DrawHeader,
             onAddCallback = OnAdd,
             onRemoveCallback = OnRemove,
@@ -93,45 +102,38 @@ public class UDictionaryDrawer : PropertyDrawer
         };
     }
 
-    private void DrawErrorMessage(Rect rect, int nameLength)
-    {
-        Vector2 offsetByName = new Vector2(nameLength * 7.5f, 0);
-        Vector2 size = new Vector2(rect.size.x, space);
-        EditorGUI.HelpBox(new Rect(rect.position + offsetByName, size), "You have duplicated keys, some changes can be lost!", MessageType.Error);
-    }
-
-    private void DrawHeader(Rect rect)
+    protected void DrawHeader(Rect rect)
     {
         EditorGUI.LabelField(rect, fieldInfo.Name);
     }
 
-    private void OnAdd(ReorderableList list)
+    protected void OnAdd(ReorderableList list)
     {
-        int index = keys.arraySize;
-        keys.InsertArrayElementAtIndex(index);
-        values.InsertArrayElementAtIndex(index);
+        int index = keysProperty.arraySize;
+        keysProperty.InsertArrayElementAtIndex(index);
+        valuesProperty.InsertArrayElementAtIndex(index);
     }
 
-    private void OnRemove(ReorderableList list)
+    protected void OnRemove(ReorderableList list)
     {
-        keys.DeleteArrayElementAtIndex(selectedIndex);
-        values.DeleteArrayElementAtIndex(selectedIndex);
+        keysProperty.DeleteArrayElementAtIndex(selectedIndex);
+        valuesProperty.DeleteArrayElementAtIndex(selectedIndex);
     }
 
-    private void OnSelect(ReorderableList list)
+    protected void OnSelect(ReorderableList list)
     {
         selectedIndex = list.index;
     }
 
-    private void OnReorder(ReorderableList list)
+    protected void OnReorder(ReorderableList list)
     {
-        values.MoveArrayElement(selectedIndex, list.index);
+        valuesProperty.MoveArrayElement(selectedIndex, list.index);
     }
 
-    private float GetReorderableElementHeight(int index)
+    protected float GetReorderableElementHeight(int index)
     {
-        float keyHeight = EditorGUI.GetPropertyHeight(keys.GetArrayElementAtIndex(index));
-        float valueHeight = EditorGUI.GetPropertyHeight(values.GetArrayElementAtIndex(index));
+        float keyHeight = EditorGUI.GetPropertyHeight(keysProperty.GetArrayElementAtIndex(index));
+        float valueHeight = EditorGUI.GetPropertyHeight(valuesProperty.GetArrayElementAtIndex(index));
         float height = 8 + Math.Max(keyHeight, valueHeight);
         if (!IsDragging || (IsDragging && elementHeight < height))
         {
@@ -140,49 +142,63 @@ public class UDictionaryDrawer : PropertyDrawer
         return elementHeight;
     }
 
-    private void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
+    protected virtual void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
     {
         rect.position = new Vector2(rect.position.x + 10, rect.position.y);
-        SerializedProperty key = keys.GetArrayElementAtIndex(index);
-        SerializedProperty value = values.GetArrayElementAtIndex(index);
-
-        float oldWidth = EditorGUIUtility.labelWidth;
+        SerializedProperty key = keysProperty.GetArrayElementAtIndex(index);
+        SerializedProperty value = valuesProperty.GetArrayElementAtIndex(index);
         float halfSizeX = rect.size.x / 2;
         float leftOffset = 100;
         float rightOffset = 58;
         Vector2 sizeKey = new Vector2(halfSizeX - leftOffset, rect.size.y);
         Vector2 sizeValue = new Vector2(halfSizeX + rightOffset, rect.size.y);
-        Vector2 valuePosition = rect.position + new Vector2(sizeKey.x + 25, 0);
+        Vector2 positionValue = rect.position + new Vector2(sizeKey.x + 25, 0);
 
+        float oldWidth = EditorGUIUtility.labelWidth;
         EditorGUIUtility.labelWidth = 50;
-        EditorGUI.PropertyField(new Rect(rect.position, sizeKey), key, GUIContent(key.type), true);
-        EditorGUI.PropertyField(new Rect(valuePosition, sizeValue), value, GUIContent(value.type), true);
+        OnBeforeDrawProperties();
+        rect = DrawPropertiesForElement(new Rect(rect.position, sizeKey), new Rect(positionValue, sizeValue), key, value);
+        OnAfterDrawProperties();
         EditorGUIUtility.labelWidth = oldWidth;
 
-        if (HasAnySameKeyValue(key, index))
-        {
-            Rect iconRect = new Rect(rect.position - errLineOffset, errSize);
-            GUI.Label(iconRect, UnityEngine.GUIContent.none, errBoxStyle); // hack for drawing red error box without flickering or losing focus
-            showError = true;
-        }
+        CheckRedBoxForElement(rect, key, index);
     }
 
-    private bool HasAnySameKeyValue(SerializedProperty key1, int actualIndex)
+    protected virtual Rect DrawPropertiesForElement(Rect keyRect, Rect valueRect, SerializedProperty keyProp, SerializedProperty valueProp)
     {
-        int length = keys.arraySize;
-        for (int i = 0; i < length; i++)
-        {
-            if (i == actualIndex)
-            {
-                continue;
-            }
-
-            SerializedProperty key2 = keys.GetArrayElementAtIndex(i);
-            if (key1.GetValue().Equals(key2.GetValue()))
-            {
-                return true;
-            }
-        }
-        return false;
+        EditorGUI.PropertyField(keyRect, keyProp, GUIContent(keyProp.type), true);
+        EditorGUI.PropertyField(valueRect, valueProp, GUIContent(valueProp.type), true);
+        return keyRect;
     }
+
+    protected void CheckRedBoxForElement(Rect rect, SerializedProperty keyProp, int index)
+    {
+        if (keysProperty.HasAnyElementSameValue(keyProp, index))
+        {
+            DrawRedBox(rect, redBoxSize, redBoxStyle, redBoxOffset);
+            showErrorMessage = true;
+        }
+    }
+
+    protected void DrawErrorMessage(Rect position, int nameLength)
+    {
+        Vector2 offsetByName = new Vector2(nameLength * 8.25f, 0);
+        Vector2 size = new Vector2(position.size.x, space);
+        EditorGUI.HelpBox(new Rect(position.position + offsetByName, size), "You have duplicated keys, some changes can be lost!", MessageType.Error);
+    }
+
+    protected void DrawRedBox(Rect position, Vector2 size, GUIStyle style, Vector2 offset = new Vector2())
+    {
+        Rect iconRect = new Rect(position.position - offset, size);
+        GUI.Label(iconRect, UnityEngine.GUIContent.none, redBoxStyle); // hack for drawing red error box without flickering or losing focus
+    }
+
+    protected GUIContent GUIContent(string text)
+    {
+        cachedContent.text = text;
+        return cachedContent;
+    }
+
+    protected virtual void OnBeforeDrawProperties() { }
+    protected virtual void OnAfterDrawProperties() { }
 }

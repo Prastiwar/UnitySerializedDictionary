@@ -13,7 +13,26 @@ public static class UDictionaryExtensions
 {
     public static readonly BindingFlags PublicOrNotInstance = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-    public static object GetValue(object source, string name)
+    public static bool HasAnyElementSameValue(this SerializedProperty array, SerializedProperty key1, int skipIndex)
+    {
+        int length = array.arraySize;
+        for (int i = 0; i < length; i++)
+        {
+            if (i == skipIndex)
+            {
+                continue;
+            }
+
+            SerializedProperty key2 = array.GetArrayElementAtIndex(i);
+            if (key1.GetValue().Equals(key2.GetValue()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static object GetValue(this object source, string name)
     {
         if (source == null)
         {
@@ -39,7 +58,7 @@ public static class UDictionaryExtensions
         return null;
     }
 
-    public static object GetValue(object source, string name, int index)
+    public static object GetValue(this object source, string name, int index)
     {
         IEnumerable enumerable = GetValue(source, name) as IEnumerable;
         if (enumerable == null)
