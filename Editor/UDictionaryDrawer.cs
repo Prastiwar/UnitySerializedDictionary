@@ -47,7 +47,7 @@ public class UDictionaryDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        return foldoutRList ? RList.GetHeight() + space : space;
+        return foldoutRList ? (RList != null ? RList.GetHeight() : 0) + space : space;
     }
 
     private void OnEnable(SerializedProperty property)

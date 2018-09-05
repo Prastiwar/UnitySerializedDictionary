@@ -33,7 +33,7 @@ public class UDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializatio
 
     void ISerializationCallbackReceiver.OnAfterDeserialize()
     {
-        if (Count == 0)
+        if (Count == 0 && m_keys != null && m_values != null)
         {
             int length = m_keys.Count;
 

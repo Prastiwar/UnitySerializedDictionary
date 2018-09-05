@@ -24,7 +24,7 @@
 
 ## Getting Started
 
-Take a look at examples in package [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/UnityDictionary.unitypackage) 
+Take a look at examples in package [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/UnityDictionaryExamples.unitypackage) 
 
 
 ## Using
@@ -38,7 +38,7 @@ and use it freely in your script
 ```cs
 [SerializeField] private UDictionaryStringInt serializedDictionary;
 ```
-If you want it to be drawed in inspector, you need to assign attribute directly to [UDictionaryDrawer](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/UDictionaryDrawer.cs) or add to its wrapper as you can see [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/UDictionaryDrawers.cs)
+If you want it to be drawed in inspector, you need to assign attribute directly to [UDictionaryDrawer](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/UDictionaryDrawer.cs) or add to its wrapper as you can see [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/CommonUDictionaries.cs)
 
 ## Contributing
 
