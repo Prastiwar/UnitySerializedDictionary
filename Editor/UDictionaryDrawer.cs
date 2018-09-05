@@ -17,21 +17,38 @@ public class UDictionaryDrawer : PropertyDrawer
     private readonly GUIContent cachedContent = new GUIContent();
     protected readonly BindingFlags privateInstanceFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
+    private bool showErrorMessage;
+    protected string errorMessage;
     private readonly Vector2 redBoxOffset = new Vector2(35, 0);
     protected readonly Vector2 redBoxSize = new Vector2(5, 20);
     protected Texture2D redBoxTexture;
     protected GUIStyle redBoxStyle;
-    protected bool showErrorMessage;
 
-    protected bool foldoutRList;
-    protected int selectedIndex;
-    protected float elementHeight;
-    protected ReorderableList rList;
+    private float elementHeight;
+    private bool foldoutRList;
 
-    protected SerializedProperty keysProperty;
-    protected SerializedProperty valuesProperty;
+    protected int SelectedIndex { get; private set; }
+    protected ReorderableList RList { get; private set; }
 
-    protected bool IsDragging { get { return (bool)rList.GetType().GetField("m_Dragging", privateInstanceFlags).GetValue(rList); } }
+    protected SerializedProperty KeysProperty { get; private set; }
+    protected SerializedProperty ValuesProperty { get; private set; }
+
+    protected bool IsDragging { get { return (bool)RList.GetType().GetField("m_Dragging", privateInstanceFlags).GetValue(RList); } }
+
+    public sealed override bool CanCacheInspectorGUI(SerializedProperty property)
+    {
+        if (!isEnabled)
+        {
+            OnEnable(property);
+        }
+        EditorPrefs.SetBool(property.name, foldoutRList);
+        return base.CanCacheInspectorGUI(property);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return foldoutRList ? RList.GetHeight() + space : space;
+    }
 
     private void OnEnable(SerializedProperty property)
     {
@@ -42,11 +59,12 @@ public class UDictionaryDrawer : PropertyDrawer
     protected virtual void OnEnabled(SerializedProperty property)
     {
         foldoutRList = EditorPrefs.GetBool(property.name);
+        errorMessage = "You have duplicated keys, some changes can be lost!";
         InitializeList(property);
         InitializeRedBoxVariables();
     }
 
-    protected void InitializeRedBoxVariables()
+    protected virtual void InitializeRedBoxVariables()
     {
         redBoxTexture = new Texture2D(1, 1);
         redBoxTexture.SetPixel(0, 0, Color.red);
@@ -56,47 +74,36 @@ public class UDictionaryDrawer : PropertyDrawer
         redBoxStyle.normal.background = redBoxTexture;
     }
 
-    public override bool CanCacheInspectorGUI(SerializedProperty property)
-    {
-        if (!isEnabled)
-        {
-            OnEnable(property);
-        }
-        EditorPrefs.SetBool(property.name, foldoutRList);
-        return base.CanCacheInspectorGUI(property);
-    }
-
     public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
     {
         foldoutRList = EditorGUI.Foldout(new Rect(rect.position, new Vector2(rect.size.x, space)), foldoutRList, label);
         if (showErrorMessage)
         {
-            DrawErrorMessage(rect, property.name.Length);
+            DrawErrorMessage(rect, property.name.Length, errorMessage);
         }
-        if (foldoutRList)
+        if (foldoutRList && RList != null)
         {
             showErrorMessage = false;
             rect.y += space;
-            rList.DoList(rect);
+            RList.DoList(rect);
         }
     }
 
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    protected void InitializeList(SerializedProperty prop)
     {
-        return foldoutRList ? rList.GetHeight() + space : space;
+        KeysProperty = prop.FindPropertyRelative("m_keys");
+        ValuesProperty = prop.FindPropertyRelative("m_values");
+        RList = CreateList(prop.serializedObject, KeysProperty);
+        RList.onSelectCallback += OnSelect;
     }
 
-    protected virtual void InitializeList(SerializedProperty prop)
+    protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
     {
-        keysProperty = prop.FindPropertyRelative("m_keys");
-        valuesProperty = prop.FindPropertyRelative("m_values");
-
-        rList = new ReorderableList(prop.serializedObject, keysProperty, true, true, true, true) {
+        return new ReorderableList(serializedObj, elements, true, true, true, true) {
             drawHeaderCallback = DrawHeader,
             onAddCallback = OnAdd,
             onRemoveCallback = OnRemove,
             onReorderCallback = OnReorder,
-            onSelectCallback = OnSelect,
             elementHeightCallback = GetReorderableElementHeight,
             drawElementCallback = DrawElement,
         };
@@ -109,31 +116,31 @@ public class UDictionaryDrawer : PropertyDrawer
 
     protected void OnAdd(ReorderableList list)
     {
-        int index = keysProperty.arraySize;
-        keysProperty.InsertArrayElementAtIndex(index);
-        valuesProperty.InsertArrayElementAtIndex(index);
+        int index = KeysProperty.arraySize;
+        KeysProperty.InsertArrayElementAtIndex(index);
+        ValuesProperty.InsertArrayElementAtIndex(index);
     }
 
     protected void OnRemove(ReorderableList list)
     {
-        keysProperty.DeleteArrayElementAtIndex(selectedIndex);
-        valuesProperty.DeleteArrayElementAtIndex(selectedIndex);
-    }
-
-    protected void OnSelect(ReorderableList list)
-    {
-        selectedIndex = list.index;
+        KeysProperty.DeleteArrayElementAtIndex(SelectedIndex);
+        ValuesProperty.DeleteArrayElementAtIndex(SelectedIndex);
     }
 
     protected void OnReorder(ReorderableList list)
     {
-        valuesProperty.MoveArrayElement(selectedIndex, list.index);
+        ValuesProperty.MoveArrayElement(SelectedIndex, list.index);
+    }
+
+    private void OnSelect(ReorderableList list)
+    {
+        SelectedIndex = list.index;
     }
 
     protected float GetReorderableElementHeight(int index)
     {
-        float keyHeight = EditorGUI.GetPropertyHeight(keysProperty.GetArrayElementAtIndex(index));
-        float valueHeight = EditorGUI.GetPropertyHeight(valuesProperty.GetArrayElementAtIndex(index));
+        float keyHeight = EditorGUI.GetPropertyHeight(KeysProperty.GetArrayElementAtIndex(index));
+        float valueHeight = EditorGUI.GetPropertyHeight(ValuesProperty.GetArrayElementAtIndex(index));
         float height = 8 + Math.Max(keyHeight, valueHeight);
         if (!IsDragging || (IsDragging && elementHeight < height))
         {
@@ -145,8 +152,8 @@ public class UDictionaryDrawer : PropertyDrawer
     protected virtual void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
     {
         rect.position = new Vector2(rect.position.x + 10, rect.position.y);
-        SerializedProperty key = keysProperty.GetArrayElementAtIndex(index);
-        SerializedProperty value = valuesProperty.GetArrayElementAtIndex(index);
+        SerializedProperty key = KeysProperty.GetArrayElementAtIndex(index);
+        SerializedProperty value = ValuesProperty.GetArrayElementAtIndex(index);
         float halfSizeX = rect.size.x / 2;
         float leftOffset = 100;
         float rightOffset = 58;
@@ -171,20 +178,20 @@ public class UDictionaryDrawer : PropertyDrawer
         return keyRect;
     }
 
-    protected void CheckRedBoxForElement(Rect rect, SerializedProperty keyProp, int index)
+    protected virtual void CheckRedBoxForElement(Rect rect, SerializedProperty keyProp, int index)
     {
-        if (keysProperty.HasAnyElementSameValue(keyProp, index))
+        if (KeysProperty.HasAnyElementSameValue(keyProp, index))
         {
             DrawRedBox(rect, redBoxSize, redBoxStyle, redBoxOffset);
             showErrorMessage = true;
         }
     }
 
-    protected void DrawErrorMessage(Rect position, int nameLength)
+    protected void DrawErrorMessage(Rect position, int nameLength, string message)
     {
         Vector2 offsetByName = new Vector2(nameLength * 8.25f, 0);
         Vector2 size = new Vector2(position.size.x, space);
-        EditorGUI.HelpBox(new Rect(position.position + offsetByName, size), "You have duplicated keys, some changes can be lost!", MessageType.Error);
+        EditorGUI.HelpBox(new Rect(position.position + offsetByName, size), message, MessageType.Error);
     }
 
     protected void DrawRedBox(Rect position, Vector2 size, GUIStyle style, Vector2 offset = new Vector2())

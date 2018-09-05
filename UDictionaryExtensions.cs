@@ -24,7 +24,9 @@ public static class UDictionaryExtensions
             }
 
             SerializedProperty key2 = array.GetArrayElementAtIndex(i);
-            if (key1.GetValue().Equals(key2.GetValue()))
+            object key1Value = key1 != null ? key1.GetValue() : null;
+            object key2Value = key2 != null ? key2.GetValue() : null;
+            if (key1Value == null ? key2Value == null : key1.GetValue().Equals(key2.GetValue()))
             {
                 return true;
             }
