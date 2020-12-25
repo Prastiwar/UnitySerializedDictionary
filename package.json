@@ -1,0 +1,11 @@
+{
+    "name": "com.prastiwar.unityserializeddictionary",
+    "displayName": "UnitySerializedDictionary",
+    "version": "1.0.6",
+    "unity": "2017.4.40",
+    "description": "Serialize Dictionary and see them visually in inspector",
+    "keywords": [ "Unity-Serialized Dictionary", "Serialized Dictionary", "Dictionary", "Serialized" ],
+    "license": "MIT",
+    "category": "Serialization",
+    "dependencies": {}
+}
