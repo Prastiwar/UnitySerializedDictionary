@@ -8,27 +8,31 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-public class UDictionaryReadOnlyDrawer : UDictionaryDrawer
+namespace UnityEditor.Collections.Generic
 {
-    private bool wasEnabled;
-
-    protected override ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
+    public class UDictionaryReadOnlyDrawer : UDictionaryDrawer
     {
-        return new ReorderableList(serializedObj, elements, false, true, false, false) {
-            drawHeaderCallback = DrawHeader,
-            elementHeightCallback = GetReorderableElementHeight,
-            drawElementCallback = DrawElement,
-        };
-    }
+        private bool wasEnabled;
 
-    protected override void OnBeforeDrawProperties()
-    {
-        wasEnabled = GUI.enabled;
-        GUI.enabled = false;
-    }
+        protected override ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
+        {
+            return new ReorderableList(serializedObj, elements, false, true, false, false)
+            {
+                drawHeaderCallback = DrawHeader,
+                elementHeightCallback = GetReorderableElementHeight,
+                drawElementCallback = DrawElement,
+            };
+        }
 
-    protected override void OnAfterDrawProperties()
-    {
-        GUI.enabled = wasEnabled;
+        protected override void OnBeforeDrawProperties()
+        {
+            wasEnabled = GUI.enabled;
+            GUI.enabled = false;
+        }
+
+        protected override void OnAfterDrawProperties()
+        {
+            GUI.enabled = wasEnabled;
+        }
     }
 }
