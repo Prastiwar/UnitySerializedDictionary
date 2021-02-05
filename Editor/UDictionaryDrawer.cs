@@ -5,6 +5,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
@@ -14,13 +15,16 @@ namespace UnityEditor.Collections.Generic
 {
     public class UDictionaryDrawer : PropertyDrawer
     {
+        const string DuplicatedKeyErrorMessage = "You have duplicated keys, some changes can be lost!";
+        const string KeyTypeErrorMessage = "The key type does not support serialization";
+        const string ValueTypeErrorMessage = "The value type does not support serialization";
+
         private bool isEnabled = false;
         private readonly float space = 17;
         private readonly GUIContent cachedContent = new GUIContent();
         protected readonly BindingFlags privateInstanceFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
-        private bool showErrorMessage;
-        protected string errorMessage;
+        private bool hasDuplicatedKey;
         private readonly Vector2 redBoxOffset = new Vector2(35, 0);
         protected readonly Vector2 redBoxSize = new Vector2(5, 20);
         protected Texture2D redBoxTexture;
@@ -61,7 +65,6 @@ namespace UnityEditor.Collections.Generic
         protected virtual void OnEnabled(SerializedProperty property)
         {
             foldoutRList = EditorPrefs.GetBool(property.name);
-            errorMessage = "You have duplicated keys, some changes can be lost!";
             InitializeList(property);
             InitializeRedBoxVariables();
         }
@@ -78,14 +81,17 @@ namespace UnityEditor.Collections.Generic
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            foldoutRList = EditorGUI.Foldout(new Rect(rect.position, new Vector2(rect.size.x, space)), foldoutRList, label);
-            if (showErrorMessage)
-            {
-                DrawErrorMessage(rect, property.name.Length, errorMessage);
-            }
+            foldoutRList = EditorGUI.Foldout(new Rect(rect.position, new Vector2(rect.size.x, space)), foldoutRList, label, true);
+            if(KeysProperty == null)
+                DrawErrorMessage(rect, property.name.Length, KeyTypeErrorMessage);
+            else if(ValuesProperty == null)
+                DrawErrorMessage(rect, property.name.Length, ValueTypeErrorMessage);
+            else if (hasDuplicatedKey)
+                DrawErrorMessage(rect, property.name.Length, DuplicatedKeyErrorMessage);
+            
             if (foldoutRList && RList != null)
             {
-                showErrorMessage = false;
+                hasDuplicatedKey = false;
                 rect.y += space;
                 RList.DoList(rect);
             }
@@ -95,8 +101,15 @@ namespace UnityEditor.Collections.Generic
         {
             KeysProperty = prop.FindPropertyRelative("m_keys");
             ValuesProperty = prop.FindPropertyRelative("m_values");
-            RList = CreateList(prop.serializedObject, KeysProperty);
-            RList.onSelectCallback += OnSelect;
+            if (KeysProperty == null || ValuesProperty == null)
+            {
+                RList = new ReorderableList(new List<object>(), typeof(object), false, true, false, false);
+            }
+            else
+            {
+                RList = CreateList(prop.serializedObject, KeysProperty);
+                RList.onSelectCallback += OnSelect;
+            }
         }
 
         protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
@@ -186,7 +199,7 @@ namespace UnityEditor.Collections.Generic
             if (KeysProperty.HasAnyElementSameValue(keyProp, index))
             {
                 DrawRedBox(rect, redBoxSize, redBoxStyle, redBoxOffset);
-                showErrorMessage = true;
+                hasDuplicatedKey = true;
             }
         }
 

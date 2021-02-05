@@ -38,11 +38,16 @@ namespace UnityEngine.Collections.Generic
             if (Count == 0 && m_keys != null && m_values != null)
             {
                 int length = m_keys.Count;
+                int valueLength = m_values.Count;
+                if(length != valueLength)
+                {
+                    Debug.LogError(string.Format("UDictionary data is broken! key length:{0} value length:{1} UDictionary type:{2}", length,valueLength,GetType()));
+                }
 
                 Clear();
                 for (int i = 0; i < length; i++)
                 {
-                    this[m_keys[i]] = m_values[i];
+                    this[m_keys[i]] = valueLength > i ? m_values[i] : default(TValue);
                 }
 
                 m_keys = null;
