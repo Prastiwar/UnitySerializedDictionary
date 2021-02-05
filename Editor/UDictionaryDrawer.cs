@@ -11,9 +11,11 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Collections;
+using UnityEngine.Collections.Generic;
 
 namespace UnityEditor.Collections.Generic
 {
+    [CustomPropertyDrawer(typeof(UDictionaryBase), true)]
     public class UDictionaryDrawer : PropertyDrawer
     {
         const string DuplicatedKeyErrorMessage = "You have duplicated keys, some changes can be lost!";
