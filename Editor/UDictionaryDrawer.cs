@@ -10,6 +10,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Collections;
 
 namespace UnityEditor.Collections.Generic
 {
@@ -32,6 +33,7 @@ namespace UnityEditor.Collections.Generic
 
         private float elementHeight;
         private bool foldoutRList;
+        private bool isReadOnly;
 
         protected int SelectedIndex { get; private set; }
         protected ReorderableList RList { get; private set; }
@@ -65,6 +67,7 @@ namespace UnityEditor.Collections.Generic
         protected virtual void OnEnabled(SerializedProperty property)
         {
             foldoutRList = EditorPrefs.GetBool(property.name);
+            isReadOnly = Attribute.IsDefined(fieldInfo, typeof(ReadOnlyAttribute));
             InitializeList(property);
             InitializeRedBoxVariables();
         }
@@ -114,7 +117,7 @@ namespace UnityEditor.Collections.Generic
 
         protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
         {
-            return new ReorderableList(serializedObj, elements, true, true, true, true)
+            return new ReorderableList(serializedObj, elements, !isReadOnly, true, !isReadOnly, !isReadOnly)
             {
                 drawHeaderCallback = DrawHeader,
                 onAddCallback = OnAdd,
@@ -222,7 +225,17 @@ namespace UnityEditor.Collections.Generic
             return cachedContent;
         }
 
-        protected virtual void OnBeforeDrawProperties() { }
-        protected virtual void OnAfterDrawProperties() { }
+
+        private bool wasEnabled;
+        protected virtual void OnBeforeDrawProperties() 
+        {
+            wasEnabled = GUI.enabled;
+            GUI.enabled = !isReadOnly;
+        }
+
+        protected virtual void OnAfterDrawProperties()
+        {
+            GUI.enabled = wasEnabled;
+        }
     }
 }

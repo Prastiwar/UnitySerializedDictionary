@@ -5,7 +5,7 @@ namespace UnityEditor.Collections.Generic
 {
     /// <summary> You need to add CustomPropertyDrawer attribute to draw custom dictionary with my default drawer </summary>
     [CustomPropertyDrawer(typeof(UDictionaryStringString))]
-    [CustomPropertyDrawer(typeof(UDictionaryStringInt))]
+    [CustomPropertyDrawer(typeof(UnityEngine.Collections.Generic.UDictionaryStringInt))]
     [CustomPropertyDrawer(typeof(UDictionaryStringBool))]
     [CustomPropertyDrawer(typeof(UDictionaryStringFloat))]
     [CustomPropertyDrawer(typeof(UDictionaryStringDouble))]
@@ -19,10 +19,6 @@ namespace UnityEditor.Collections.Generic
     [CustomPropertyDrawer(typeof(UDictionaryIntColor))]
     [CustomPropertyDrawer(typeof(UDictionaryIntObject))]
     internal class UDictionaryDrawers : UDictionaryDrawer { }
-
-    /// <summary> You need to add CustomPropertyDrawer attribute to draw custom dictionary with my default readonly drawer </summary>
-    //[CustomPropertyDrawer(typeof(UDictionaryIntString))]
-    internal class UDictionaryReadOnlyDrawers : UDictionaryReadOnlyDrawer { }
 
     /// <summary> You need to add CustomPropertyDrawer attribute to draw custom dictionary with my default read key drawer </summary>
     //[CustomPropertyDrawer(typeof(UDictionaryIntString))]
