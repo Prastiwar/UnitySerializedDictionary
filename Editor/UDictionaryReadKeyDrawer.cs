@@ -4,18 +4,20 @@
 *   Repository: https://github.com/Prastiwar/UnitySerializedDictionary
 */
 
-using UnityEditor;
 using UnityEngine;
 
-public class UDictionaryReadKeyDrawer : UDictionaryDrawer
+namespace UnityEditor.Collections.Generic
 {
-    protected override Rect DrawPropertiesForElement(Rect keyRect, Rect valueRect, SerializedProperty keyProp, SerializedProperty valueProp)
+    public class UDictionaryReadKeyDrawer : UDictionaryDrawer
     {
-        bool wasEnabled = GUI.enabled;
-        GUI.enabled = false;
-        EditorGUI.PropertyField(keyRect, keyProp, GUIContent(keyProp.type), true);
-        GUI.enabled = wasEnabled;
-        EditorGUI.PropertyField(valueRect, valueProp, GUIContent(valueProp.type), true);
-        return keyRect;
+        protected override Rect DrawPropertiesForElement(Rect keyRect, Rect valueRect, SerializedProperty keyProp, SerializedProperty valueProp)
+        {
+            bool wasEnabled = GUI.enabled;
+            GUI.enabled = false;
+            EditorGUI.PropertyField(keyRect, keyProp, GUIContent(keyProp.type), true);
+            GUI.enabled = wasEnabled;
+            EditorGUI.PropertyField(valueRect, valueProp, GUIContent(valueProp.type), true);
+            return keyRect;
+        }
     }
 }
