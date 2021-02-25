@@ -19,26 +19,12 @@
 
 ## Before start
 
-- [x] Make sure you have at least **Unity 2017** (previous versions weren't tested)
-
-
-## Getting Started
-
-Take a look at examples in package [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/UnityDictionaryExamples.unitypackage) 
+- [x] Make sure you have at least **Unity 2019.4** (Version 2017 was working fine before #3 PR, not sure if it will work now)
 
 
 ## Using
 
-To serialize dictionary you need to write short wrapper:
-```cs
-[Serializable]
-public class UDictionaryStringInt : UDictionary<string, int> { }
-```  
-and use it freely in your script
-```cs
-[SerializeField] private UDictionaryStringInt serializedDictionary;
-```
-If you want it to be drawed in inspector, you need to assign attribute directly to [UDictionaryDrawer](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/UDictionaryDrawer.cs) or add to its wrapper as you can see [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/Editor/CommonUDictionaries.cs)
+Take a look at examples in package [THERE](https://github.com/Prastiwar/UnitySerializedDictionary/blob/master/UnityDictionaryExamples.unitypackage) 
 
 ## Contributing
 
