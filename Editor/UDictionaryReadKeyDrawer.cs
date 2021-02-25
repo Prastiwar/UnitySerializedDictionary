@@ -4,7 +4,6 @@
 *   Repository: https://github.com/Prastiwar/UnitySerializedDictionary
 */
 
-using UnityEditor;
 using UnityEngine;
 
 namespace UnityEditor.Collections.Generic

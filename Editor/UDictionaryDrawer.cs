@@ -7,10 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEditor;
+using Unity.Collections;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Collections;
 using UnityEngine.Collections.Generic;
 
 namespace UnityEditor.Collections.Generic
@@ -18,9 +17,9 @@ namespace UnityEditor.Collections.Generic
     [CustomPropertyDrawer(typeof(UDictionaryBase), true)]
     public class UDictionaryDrawer : PropertyDrawer
     {
-        const string DuplicatedKeyErrorMessage = "You have duplicated keys, some changes can be lost!";
-        const string KeyTypeErrorMessage = "The key type does not support serialization";
-        const string ValueTypeErrorMessage = "The value type does not support serialization";
+        private const string DuplicatedKeyErrorMessage = "You have duplicated keys, some changes can be lost!";
+        private const string KeyTypeErrorMessage = "The key type does not support serialization";
+        private const string ValueTypeErrorMessage = "The value type does not support serialization";
 
         private bool isEnabled = false;
         private readonly float space = 17;
@@ -43,7 +42,7 @@ namespace UnityEditor.Collections.Generic
         protected SerializedProperty KeysProperty { get; private set; }
         protected SerializedProperty ValuesProperty { get; private set; }
 
-        protected bool IsDragging { get { return (bool)RList.GetType().GetField("m_Dragging", privateInstanceFlags).GetValue(RList); } }
+        protected bool IsDragging => (bool)RList.GetType().GetField("m_Dragging", privateInstanceFlags).GetValue(RList);
 
         public sealed override bool CanCacheInspectorGUI(SerializedProperty property)
         {
@@ -55,10 +54,7 @@ namespace UnityEditor.Collections.Generic
             return base.CanCacheInspectorGUI(property);
         }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return foldoutRList ? (RList != null ? RList.GetHeight() : 0) + space : space;
-        }
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => foldoutRList ? (RList != null ? RList.GetHeight() : 0) + space : space;
 
         private void OnEnable(SerializedProperty property)
         {
@@ -86,14 +82,26 @@ namespace UnityEditor.Collections.Generic
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
+            if (!isEnabled)
+            {
+                // this shouldn't be here, but since CanCacheInspectorGUI is apparently not called
+                // there is not currently way to call this just on enabled
+                OnEnable(property);
+            }
             foldoutRList = EditorGUI.Foldout(new Rect(rect.position, new Vector2(rect.size.x, space)), foldoutRList, label, true);
-            if(KeysProperty == null)
+            if (KeysProperty == null)
+            {
                 DrawErrorMessage(rect, property.name.Length, KeyTypeErrorMessage);
-            else if(ValuesProperty == null)
+            }
+            else if (ValuesProperty == null)
+            {
                 DrawErrorMessage(rect, property.name.Length, ValueTypeErrorMessage);
+            }
             else if (hasDuplicatedKey)
+            {
                 DrawErrorMessage(rect, property.name.Length, DuplicatedKeyErrorMessage);
-            
+            }
+
             if (foldoutRList && RList != null)
             {
                 hasDuplicatedKey = false;
@@ -117,10 +125,8 @@ namespace UnityEditor.Collections.Generic
             }
         }
 
-        protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements)
-        {
-            return new ReorderableList(serializedObj, elements, !isReadOnly, true, !isReadOnly, !isReadOnly)
-            {
+        protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements) => 
+            new ReorderableList(serializedObj, elements, !isReadOnly, true, !isReadOnly, !isReadOnly) {
                 drawHeaderCallback = DrawHeader,
                 onAddCallback = OnAdd,
                 onRemoveCallback = OnRemove,
@@ -128,12 +134,8 @@ namespace UnityEditor.Collections.Generic
                 elementHeightCallback = GetReorderableElementHeight,
                 drawElementCallback = DrawElement,
             };
-        }
 
-        protected void DrawHeader(Rect rect)
-        {
-            EditorGUI.LabelField(rect, fieldInfo.Name);
-        }
+        protected void DrawHeader(Rect rect) => EditorGUI.LabelField(rect, fieldInfo.Name);
 
         protected void OnAdd(ReorderableList list)
         {
@@ -148,15 +150,9 @@ namespace UnityEditor.Collections.Generic
             ValuesProperty.DeleteArrayElementAtIndex(SelectedIndex);
         }
 
-        protected void OnReorder(ReorderableList list)
-        {
-            ValuesProperty.MoveArrayElement(SelectedIndex, list.index);
-        }
+        protected void OnReorder(ReorderableList list) => ValuesProperty.MoveArrayElement(SelectedIndex, list.index);
 
-        private void OnSelect(ReorderableList list)
-        {
-            SelectedIndex = list.index;
-        }
+        private void OnSelect(ReorderableList list) => SelectedIndex = list.index;
 
         protected float GetReorderableElementHeight(int index)
         {
@@ -229,15 +225,12 @@ namespace UnityEditor.Collections.Generic
 
 
         private bool wasEnabled;
-        protected virtual void OnBeforeDrawProperties() 
+        protected virtual void OnBeforeDrawProperties()
         {
             wasEnabled = GUI.enabled;
             GUI.enabled = !isReadOnly;
         }
 
-        protected virtual void OnAfterDrawProperties()
-        {
-            GUI.enabled = wasEnabled;
-        }
+        protected virtual void OnAfterDrawProperties() => GUI.enabled = wasEnabled;
     }
 }

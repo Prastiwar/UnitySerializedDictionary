@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Runtime.ConstrainedExecution;
 
-
 namespace Unity.Collections
 {
     public static class HashHelpers
     {
-        public const Int32 HashPrime = 101;
+        public const int HashPrime = 101;
 
         // Table of prime numbers to use as hash table sizes. 
         // A typical resize algorithm would pick the smallest prime number in this array
@@ -36,7 +35,9 @@ namespace Unity.Collections
                 for (int divisor = 3; divisor <= limit; divisor += 2)
                 {
                     if ((candidate % divisor) == 0)
+                    {
                         return false;
+                    }
                 }
                 return true;
             }
@@ -47,28 +48,32 @@ namespace Unity.Collections
         public static int GetPrime(int min)
         {
             if (min < 0)
+            {
                 throw new ArgumentException();
+            }
 
             for (int i = 0; i < primes.Length; i++)
             {
                 int prime = primes[i];
-                if (prime >= min) return prime;
+                if (prime >= min)
+                {
+                    return prime;
+                }
             }
 
             //outside of our predefined table. 
             //compute the hard way. 
-            for (int i = (min | 1); i < Int32.MaxValue; i += 2)
+            for (int i = (min | 1); i < int.MaxValue; i += 2)
             {
                 if (IsPrime(i) && ((i - 1) % HashPrime != 0))
+                {
                     return i;
+                }
             }
             return min;
         }
 
-        public static int GetMinPrime()
-        {
-            return primes[0];
-        }
+        public static int GetMinPrime() => primes[0];
 
         // Returns size of hashtable to grow to.
         public static int ExpandPrime(int oldSize)
@@ -81,7 +86,6 @@ namespace Unity.Collections
             {
                 return MaxPrimeArrayLength;
             }
-
             return GetPrime(newSize);
         }
 
