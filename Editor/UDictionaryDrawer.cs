@@ -125,7 +125,7 @@ namespace UnityEditor.Collections.Generic
             }
         }
 
-        protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements) => 
+        protected virtual ReorderableList CreateList(SerializedObject serializedObj, SerializedProperty elements) =>
             new ReorderableList(serializedObj, elements, !isReadOnly, true, !isReadOnly, !isReadOnly) {
                 drawHeaderCallback = DrawHeader,
                 onAddCallback = OnAdd,
