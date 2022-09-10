@@ -139,11 +139,8 @@ namespace UnityEngine.Collections.Generic
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            if (m_keys == null)
-            {
-                m_keys = Keys.ToArray();
-                m_values = Values.ToArray();
-            }
+            m_keys = Keys.ToArray();
+            m_values = Values.ToArray();
         }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
